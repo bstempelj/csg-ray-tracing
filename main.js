@@ -15,6 +15,7 @@ const positionAttribLocation = gl.getAttribLocation(program, 'a_position');
 const translationUniformLocation = gl.getUniformLocation(program, 'u_translation');
 const rotationUniformLocation = gl.getUniformLocation(program, 'u_rotation');
 const matrixLocation = gl.getUniformLocation(program, 'u_matrix');
+const projectionLocation = gl.getUniformLocation(program, 'u_projection');
 
 const buffers = initBuffers();
 
@@ -48,9 +49,23 @@ function render(now) {
 }
 requestAnimationFrame(render);
 
-
+function toRad(angle) {
+	return angle * Math.PI / 180.0;
+}
 
 let angle = 0.0;
+
+
+var fieldOfViewInRadians = toRad(45);
+var aspect = canvas.width / canvas.height;
+var f = Math.tan(Math.PI * 0.5 - 0.5 * fieldOfViewInRadians);
+var projection = [
+  f / aspect, 0, 0, 0,
+  0, f, 0, 0,
+  0, 0, 1, -1,
+  0, 0, 0, 0,
+];
+
 
 function drawScene(deltaTime) {
 	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
@@ -68,11 +83,25 @@ function drawScene(deltaTime) {
 	// gl.uniform2fv(translationUniformLocation, [cameraX, cameraY]);
 
 	// // rotate camera
-	gl.uniform2fv(rotationUniformLocation, [Math.cos(angle), Math.sin(angle)]);
+	// gl.uniform2fv(rotationUniformLocation, [Math.cos(angle), Math.sin(angle)]);
+
+	// projection matrix
+	gl.uniformMatrix4fv(projectionLocation, false, projection);
+
+	// transformation matrix
+	let matrix = [
+	   1,  0,  0,  0,
+	   0,  1,  0,  0,
+	   0,  0,  1,  0,
+	   0, 0, 5, 1,
+	];
+	var rotationMatrix = m4.yRotation(toRad(angle));
+	matrix = m4.multiply(rotationMatrix, matrix);
+	gl.uniformMatrix4fv(matrixLocation, false, matrix);
 
 	const vertices = 4;
 	const offset = 0;
 	gl.drawArrays(gl.TRIANGLE_STRIP, offset, vertices);
 
-	angle += deltaTime;
+	angle += deltaTime * 100;
 }
