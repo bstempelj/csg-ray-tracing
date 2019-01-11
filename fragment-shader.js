@@ -6,12 +6,21 @@ precision mediump float;
 
 in vec4 v_position;
 
+uniform vec2 u_translation;
+uniform vec2 u_rotation;
+
+uniform vec4 u_matrix;
+
 out vec4 outColor;
 
 struct Sphere {
 	vec3 center;
 	float radius;
 	vec4 color;
+};
+
+struct Box {
+	vec3 bounds[2];
 };
 
 struct Ray {
@@ -46,6 +55,60 @@ float intersect(Sphere sphere, Ray ray) {
 	return t0;
 }
 
+bool intersectBox(Box box, Ray r, out vec2 result) {
+	vec3 min = box.bounds[0];
+	vec3 max = box.bounds[1];
+
+	float tmin = (min.x - r.origin.x) / r.direction.x;
+	float tmax = (max.x - r.origin.x) / r.direction.x;
+
+	if (tmin > tmax) {
+		float temp = tmin;
+		tmin = tmax;
+		tmax = temp;
+	}
+
+	float tymin = (min.y - r.origin.y) / r.direction.y;
+	float tymax = (max.y - r.origin.y) / r.direction.y;
+
+	if (tymin > tymax) {
+		float temp = tymin;
+		tymin = tymax;
+		tymax = temp;
+	}
+
+	if ((tmin > tymax) || (tymin > tmax))
+		return false;
+
+	if (tymin > tmin)
+		tmin = tymin;
+
+	if (tymax < tmax)
+		tmax = tymax;
+
+	float tzmin = (min.z - r.origin.z) / r.direction.z;
+	float tzmax = (max.z - r.origin.z) / r.direction.z;
+
+	if (tzmin > tzmax) {
+		float temp = tzmin;
+		tzmin = tzmax;
+		tzmax = tzmin;
+	}
+
+	if ((tmin > tzmax) || (tzmin > tmax))
+		return false;
+
+	if (tzmin > tmin)
+		tmin = tzmin;
+
+	if (tzmax < tmax)
+		tmax = tzmax;
+
+	result = vec2(tmin, tmax);
+
+	return true;
+}
+
 void main() {
 	float x = v_position.x;
 	float y = v_position.y;
@@ -60,18 +123,40 @@ void main() {
 	sphere2.radius = 1.0;
 	sphere2.color = vec4(0.0, 0.0, 1.0, 1.0);
 
+	Box box;
+	box.bounds[0] = vec3(-0.2);	// min
+	box.bounds[1] = vec3(0.2);	// max
+
 	Ray ray;
-	ray.origin = vec3(0.0, 0.0, 0.0);
+	ray.origin = vec3(0.0, 0.0, 1.0);
 	ray.direction = normalize(vec3(x - 0.5, y - 0.5, -1.0));
 
+	// Ray ray;
+	// ray.origin = vec3(u_rotation.x, y, u_rotation.y);
+	// ray.direction = normalize(vec3(x - 0.5 + u_rotation.x, y - 0.5, -1.0));	
+
 	Light light;
-	light.direction = vec3(-1.0, -1.0, 0.0);
-	light.color = vec4(0.75, 0.75, 0.75, 1.0);
+	light.direction = vec3(-1.0 + u_rotation.x, -1.0, -1.0);
+	light.color = vec4(0.9, 0.9, 0.9, 1.0);
+
+
+	vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
+
+	// BOX
+	vec2 hitPoints;
+	if (intersectBox(box, ray, hitPoints)) {
+		float t = hitPoints.x;
+		vec3 p = ray.origin + ray.direction * t;
+		vec3 n = normalize(p / 0.5);
+		vec3 L = -normalize(light.direction);
+		color = vec4(0.2, 0.2, 0.2, 1.0) + vec4(1, 0, 0, 1) * light.color * max(0.0, dot(n, L));
+		color.a = 1.0;
+	}
+	// /BOX
 
 	float s1_t0 = intersect(sphere1, ray);
 	float s2_t0 = intersect(sphere2, ray);
 
-	vec4 color = vec4(1.0, 1.0, 1.0, 1.0);
 
 	#define NORMAL 1
 	#define INTERSECT 0
