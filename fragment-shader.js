@@ -37,7 +37,7 @@ struct Light {
 	float intensity;
 };
 
-bool intersectSphere(Sphere sphere, Ray ray, out float hitPoint) {
+bool intersectSphere(Sphere sphere, Ray ray, out vec2 hitPoints) {
 	float t0, t1;
 
 	vec3 L = sphere.center - ray.origin;
@@ -54,7 +54,7 @@ bool intersectSphere(Sphere sphere, Ray ray, out float hitPoint) {
 	t0 = tca - thc;
 	t1 = tca + thc;
 
-	hitPoint = t0;
+	hitPoints = vec2(t0, t1);
 
 	return true;
 }
@@ -108,7 +108,7 @@ bool intersectBox(Box box, Ray r, out vec2 result) {
 }
 
 void main() {
-	#define SPHERE 0
+	#define SPHERE 1
 	#define BOX 1
 
 	// colors
@@ -122,7 +122,7 @@ void main() {
 
 	Sphere sphere;
 	sphere.center = vec3(0.0, 0.0, 0.0);
-	sphere.radius = 1.5;
+	sphere.radius = 1.32;
 	sphere.color = green;
 
 	Box box;
@@ -139,26 +139,31 @@ void main() {
 	light.color = vec4(0.75, 0.75, 0.75, 1.0);
 
 	#if SPHERE
-	float t;
-	if (intersectSphere(sphere, ray, t)) {
-		vec3 hitPoint = ray.origin + ray.direction * t;
-		vec3 n = normalize(hitPoint - sphere.center);
-		vec3 L = -normalize(light.direction);		
-		color = vec4(0.2, 0.2, 0.2, 1.0) + sphere.color * light.color * max(0.0, dot(n, L));
-		color.a = 1.0;
+	{
+		vec2 hitPoints;
+		if (intersectSphere(sphere, ray, hitPoints)) {
+			float t = hitPoints.x;
+			vec3 hitPoint = ray.origin + ray.direction * t;
+			vec3 n = normalize(hitPoint - sphere.center);
+			vec3 L = -normalize(light.direction);		
+			color = vec4(0.2, 0.2, 0.2, 1.0) + sphere.color * light.color * max(0.0, dot(n, L));
+			color.a = 1.0;
+		}
 	}
 	#endif
 
 	#if BOX
-	vec2 hitPoints;
-	if (intersectBox(box, ray, hitPoints)) {
-		// color = box.color;
-		float t = hitPoints.x;
-		vec3 p = ray.origin + ray.direction * t;
-		vec3 n = normalize(p / 0.5);
-		vec3 L = -normalize(light.direction);
-		color = vec4(0.2, 0.2, 0.2, 1.0) + box.color * light.color * max(0.0, dot(n, L));
-		color.a = 1.0;
+	{
+		vec2 hitPoints;
+		if (intersectBox(box, ray, hitPoints)) {
+			// color = box.color;
+			float t = hitPoints.x;
+			vec3 p = ray.origin + ray.direction * t;
+			vec3 n = normalize(p / 0.5);
+			vec3 L = -normalize(light.direction);
+			color = vec4(0.2, 0.2, 0.2, 1.0) + box.color * light.color * max(0.0, dot(n, L));
+			color.a = 1.0;
+		}
 	}
 	#endif
 
