@@ -107,13 +107,14 @@ bool intersectBox(Box box, Ray r, out vec2 result) {
 	return true;
 }
 
-vec4 colorSphere(Sphere sphere, Ray ray, Light light, float t) {
+vec4 colorSphere(Sphere sphere, Ray ray, Light light, float t, bool flipNormal) {
 	vec4 color;
 	bool sampled = true;
 
 	if (sampled) {
 		vec3 hitPoint = ray.origin + ray.direction * t;
 		vec3 n = normalize(hitPoint - sphere.center);
+		if (flipNormal) n = -n;
 		vec3 L = -normalize(light.direction);
 		color = vec4(0.2, 0.2, 0.2, 1.0) + sphere.color * light.color * max(0.0, dot(n, L));
 		color.a = 1.0;
@@ -173,7 +174,6 @@ void main() {
 	ray.origin = u_matrix[3].xyz;
 	ray.direction = (u_matrix * vec4(normalize(vec3(v_position.x, v_position.y, -1.0)).xyz, 0.0)).xyz;
 
-
 	Light light;
 	light.direction = vec3(-0.45, -1.0, 0.0);
 	light.color = vec4(0.75, 0.75, 0.75, 1.0);
@@ -182,21 +182,13 @@ void main() {
 	bool si = intersectSphere(sphere, ray, sphereHitPoints);
 	float st0 = sphereHitPoints.x;
 	float st1 = sphereHitPoints.y;
-	vec4 sphereColor = colorSphere(sphere, ray, light, sphereHitPoints.x);
-
-	// new colors
-	// vec3 ns = normalize((ray.origin + ray.direction * st0) - sphere.center);
-	// sphereColor = vec4(ns, 1) * 0.5;
+	vec4 sphereColor = colorSphere(sphere, ray, light, sphereHitPoints.x, false);
 
 	vec2 boxHitPoints;
 	bool bi = intersectBox(box, ray, boxHitPoints);
 	float bt0 = boxHitPoints.x;
 	float bt1 = boxHitPoints.y;
 	vec4 boxColor = colorBox(box, ray, light, boxHitPoints.x);
-
-	// new colors
-	// vec3 nb = normalize((ray.origin + ray.direction * bt0) / 0.5);
-	// boxColor = vec4(nb, 1) / 0.5;
 
 	#if UNION
 	if (si && !bi) {
@@ -231,7 +223,8 @@ void main() {
 		}
 		else {
 			if (st1 > bt0 && bt0 > st0) {
-				color = sphereColor;
+				// color = sphereColor;
+				color = colorSphere(sphere, ray, light, st1, true);
 			}
       else {
 				color = boxColor;      	
