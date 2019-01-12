@@ -20,6 +20,11 @@ struct Sphere {
 	vec4 color;
 };
 
+struct Box {
+	vec3 bounds[2];
+	vec4 color;
+};
+
 struct Ray {
 	vec3 origin;
 	vec3 direction;
@@ -54,7 +59,50 @@ bool intersectSphere(Sphere sphere, Ray ray, out float hitPoint) {
 	return true;
 }
 
+bool intersectBox(Box box, Ray r, out vec2 result) {
+	vec3 min = box.bounds[0];
+	vec3 max = box.bounds[1];
+	float tmin = (min.x - r.origin.x) / r.direction.x;
+	float tmax = (max.x - r.origin.x) / r.direction.x;
+	if (tmin > tmax) {
+		float temp = tmin;
+		tmin = tmax;
+		tmax = temp;
+	}
+	float tymin = (min.y - r.origin.y) / r.direction.y;
+	float tymax = (max.y - r.origin.y) / r.direction.y;
+	if (tymin > tymax) {
+		float temp = tymin;
+		tymin = tymax;
+		tymax = temp;
+	}
+	if ((tmin > tymax) || (tymin > tmax))
+		return false;
+	if (tymin > tmin)
+		tmin = tymin;
+	if (tymax < tmax)
+		tmax = tymax;
+	float tzmin = (min.z - r.origin.z) / r.direction.z;
+	float tzmax = (max.z - r.origin.z) / r.direction.z;
+	if (tzmin > tzmax) {
+		float temp = tzmin;
+		tzmin = tzmax;
+		tzmax = tzmin;
+	}
+	if ((tmin > tzmax) || (tzmin > tmax))
+		return false;
+	if (tzmin > tmin)
+		tmin = tzmin;
+	if (tzmax < tmax)
+		tmax = tzmax;
+	result = vec2(tmin, tmax);
+	return true;
+}
+
 void main() {
+	#define SPHERE 0
+	#define BOX 1
+
 	// colors
 	vec4 white = vec4(1, 1, 1, 1);
 	vec4 black = vec4(0, 0, 0, 1);
@@ -69,6 +117,11 @@ void main() {
 	sphere.radius = 1.0;
 	sphere.color = green;
 
+	Box box;
+	box.bounds[0] = vec3(-1);	// min
+	box.bounds[1] = vec3(1);	// max
+	box.color = red;
+
 	Ray ray;
 	ray.origin = u_matrix[3].xyz;
 	ray.direction = (u_matrix * vec4(normalize(vec3(v_position.x, v_position.y, -1.0)).xyz, 0.0)).xyz;
@@ -77,7 +130,7 @@ void main() {
 	light.direction = vec3(-0.45, -1.0, 0.0);
 	light.color = vec4(0.75, 0.75, 0.75, 1.0);
 
-
+	#if SPHERE
 	float t;
 	if (intersectSphere(sphere, ray, t)) {
 		vec3 hitPoint = ray.origin + ray.direction * t;
@@ -86,6 +139,19 @@ void main() {
 		color = vec4(0.2, 0.2, 0.2, 1.0) + sphere.color * light.color * max(0.0, dot(n, L));
 		color.a = 1.0;
 	}
+	#endif
+
+	#if BOX
+	vec2 hitPoints;
+	if (intersectBox(box, ray, hitPoints)) {
+		float t = hitPoints.x;
+		vec3 p = ray.origin + ray.direction * t;
+		vec3 n = normalize(p / 0.5);
+		vec3 L = -normalize(light.direction);
+		color = vec4(0.2, 0.2, 0.2, 1.0) + box.color * light.color * max(0.0, dot(n, L));
+		color.a = 1.0;
+	}
+	#endif
 
 	outColor = color;
 }

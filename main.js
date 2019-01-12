@@ -96,6 +96,7 @@ function drawScene(deltaTime) {
 	   0, 0, 5, 1,
 	];
 	var rotationMatrix = m4.yRotation(toRad(angle));
+	// rotationMatrix = m4.multiply(rotationMatrix, m4.xRotation(toRad(angle)));
 	matrix = m4.multiply(rotationMatrix, matrix);
 	gl.uniformMatrix4fv(matrixLocation, false, matrix);
 
