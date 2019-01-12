@@ -144,7 +144,8 @@ vec4 colorBox(Box box, Ray ray, Light light, float t) {
 }
 
 void main() {
-	#define SUBTRACT 1
+	#define UNION 1
+	#define INTER 0
 
 
 	// colors
@@ -157,8 +158,8 @@ void main() {
 	vec4 color = black;
 
 	Sphere sphere;
-	sphere.center = vec3(0.0, 0.0, 0.0);
-	sphere.radius = 1.32;
+	sphere.center = vec3(1.0, 1.0, 0.0);
+	sphere.radius = 1.2;
 	sphere.color = green;
 
 	Box box;
@@ -170,23 +171,65 @@ void main() {
 	ray.origin = u_matrix[3].xyz;
 	ray.direction = (u_matrix * vec4(normalize(vec3(v_position.x, v_position.y, -1.0)).xyz, 0.0)).xyz;
 
+
 	Light light;
 	light.direction = vec3(-0.45, -1.0, 0.0);
 	light.color = vec4(0.75, 0.75, 0.75, 1.0);
 
-	{
-		vec2 hitPoints;
-		if (intersectSphere(sphere, ray, hitPoints)) {
-			color = colorSphere(sphere, ray, light, hitPoints.x);
-		}
+	vec2 sphereHitPoints;
+	bool si = intersectSphere(sphere, ray, sphereHitPoints);
+	float st0 = sphereHitPoints.x;
+	float st1 = sphereHitPoints.y;
+	vec4 sphereColor = colorSphere(sphere, ray, light, sphereHitPoints.x);
+
+	vec2 boxHitPoints;
+	bool bi = intersectBox(box, ray, boxHitPoints);
+	float bt0 = boxHitPoints.x;
+	float bt1 = boxHitPoints.y;
+	vec4 boxColor = colorBox(box, ray, light, boxHitPoints.x);
+
+	#if UNION
+	if (si && !bi) {
+		color = sphereColor;
+	} else if (!si && bi) {
+		color = boxColor;
 	}
 
-	{
-		vec2 hitPoints;
-		if (intersectBox(box, ray, hitPoints)) {
-			color = colorBox(box, ray, light, hitPoints.x);
-		}
+	if (si && (st0 < bt0)) {
+		color = sphereColor;
+	} else if (bi && (bt0 < st0)) {
+		color = boxColor;
 	}
+	#endif
+
+	#if INTER
+	if (si && bi) {
+		if (st0 > bt0) {
+			color = sphereColor;
+		} else if (bt0 > st0) {
+			color = boxColor;
+		}
+	} else {
+		color = black;
+	}
+	#endif
+
+
+
+	// --- OLD WAY ---
+	// {
+	// 	vec2 hitPoints;
+	// 	if (intersectSphere(sphere, ray, hitPoints)) {
+	// 		color = colorSphere(sphere, ray, light, hitPoints.x);
+	// 	}
+	// }
+
+	// {
+	// 	vec2 hitPoints;
+	// 	if (intersectBox(box, ray, hitPoints)) {
+	// 		color = colorBox(box, ray, light, hitPoints.y);
+	// 	}
+	// }
 
 	outColor = color;
 }
