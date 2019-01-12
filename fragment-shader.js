@@ -107,9 +107,45 @@ bool intersectBox(Box box, Ray r, out vec2 result) {
 	return true;
 }
 
+vec4 colorSphere(Sphere sphere, Ray ray, Light light, float t) {
+	vec4 color;
+	bool sampled = true;
+
+	if (sampled) {
+		vec3 hitPoint = ray.origin + ray.direction * t;
+		vec3 n = normalize(hitPoint - sphere.center);
+		vec3 L = -normalize(light.direction);
+		color = vec4(0.2, 0.2, 0.2, 1.0) + sphere.color * light.color * max(0.0, dot(n, L));
+		color.a = 1.0;
+	}
+	else {
+		color = sphere.color;
+	}
+
+	return color;
+}
+
+vec4 colorBox(Box box, Ray ray, Light light, float t) {
+	vec4 color;
+	bool sampled = true;
+
+	if (sampled) {
+		vec3 p = ray.origin + ray.direction * t;
+		vec3 n = normalize(p / 0.5);
+		vec3 L = -normalize(light.direction);
+		color = vec4(0.2, 0.2, 0.2, 1.0) + box.color * light.color * max(0.0, dot(n, L));
+		color.a = 1.0;
+	}
+	else {
+		color = box.color;
+	}
+
+	return color;
+}
+
 void main() {
-	#define SPHERE 1
-	#define BOX 1
+	#define SUBTRACT 1
+
 
 	// colors
 	vec4 white = vec4(1, 1, 1, 1);
@@ -138,34 +174,19 @@ void main() {
 	light.direction = vec3(-0.45, -1.0, 0.0);
 	light.color = vec4(0.75, 0.75, 0.75, 1.0);
 
-	#if SPHERE
 	{
 		vec2 hitPoints;
 		if (intersectSphere(sphere, ray, hitPoints)) {
-			float t = hitPoints.x;
-			vec3 hitPoint = ray.origin + ray.direction * t;
-			vec3 n = normalize(hitPoint - sphere.center);
-			vec3 L = -normalize(light.direction);		
-			color = vec4(0.2, 0.2, 0.2, 1.0) + sphere.color * light.color * max(0.0, dot(n, L));
-			color.a = 1.0;
+			color = colorSphere(sphere, ray, light, hitPoints.x);
 		}
 	}
-	#endif
 
-	#if BOX
 	{
 		vec2 hitPoints;
 		if (intersectBox(box, ray, hitPoints)) {
-			// color = box.color;
-			float t = hitPoints.x;
-			vec3 p = ray.origin + ray.direction * t;
-			vec3 n = normalize(p / 0.5);
-			vec3 L = -normalize(light.direction);
-			color = vec4(0.2, 0.2, 0.2, 1.0) + box.color * light.color * max(0.0, dot(n, L));
-			color.a = 1.0;
+			color = colorBox(box, ray, light, hitPoints.x);
 		}
 	}
-	#endif
 
 	outColor = color;
 }
