@@ -59,43 +59,51 @@ bool intersectSphere(Sphere sphere, Ray ray, out float hitPoint) {
 	return true;
 }
 
+void swap(inout float tmin, inout float tmax) {
+	float temp = tmin;
+	tmin = tmax;
+	tmax = temp;
+}
+
 bool intersectBox(Box box, Ray r, out vec2 result) {
 	vec3 min = box.bounds[0];
 	vec3 max = box.bounds[1];
+
 	float tmin = (min.x - r.origin.x) / r.direction.x;
 	float tmax = (max.x - r.origin.x) / r.direction.x;
-	if (tmin > tmax) {
-		float temp = tmin;
-		tmin = tmax;
-		tmax = temp;
-	}
+
+	if (tmin > tmax)
+		swap(tmin, tmax);
+
 	float tymin = (min.y - r.origin.y) / r.direction.y;
 	float tymax = (max.y - r.origin.y) / r.direction.y;
-	if (tymin > tymax) {
-		float temp = tymin;
-		tymin = tymax;
-		tymax = temp;
-	}
+
+	if (tymin > tymax)
+		swap(tymin, tymax);
+
 	if ((tmin > tymax) || (tymin > tmax))
 		return false;
+
 	if (tymin > tmin)
 		tmin = tymin;
 	if (tymax < tmax)
 		tmax = tymax;
+
 	float tzmin = (min.z - r.origin.z) / r.direction.z;
 	float tzmax = (max.z - r.origin.z) / r.direction.z;
-	if (tzmin > tzmax) {
-		float temp = tzmin;
-		tzmin = tzmax;
-		tzmax = tzmin;
-	}
+
+	if (tzmin > tzmax)
+		swap(tzmin, tzmax);
+
 	if ((tmin > tzmax) || (tzmin > tmax))
 		return false;
 	if (tzmin > tmin)
 		tmin = tzmin;
 	if (tzmax < tmax)
 		tmax = tzmax;
+
 	result = vec2(tmin, tmax);
+
 	return true;
 }
 
@@ -114,7 +122,7 @@ void main() {
 
 	Sphere sphere;
 	sphere.center = vec3(0.0, 0.0, 0.0);
-	sphere.radius = 1.0;
+	sphere.radius = 1.5;
 	sphere.color = green;
 
 	Box box;
@@ -144,6 +152,7 @@ void main() {
 	#if BOX
 	vec2 hitPoints;
 	if (intersectBox(box, ray, hitPoints)) {
+		// color = box.color;
 		float t = hitPoints.x;
 		vec3 p = ray.origin + ray.direction * t;
 		vec3 n = normalize(p / 0.5);
