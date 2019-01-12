@@ -144,9 +144,11 @@ vec4 colorBox(Box box, Ray ray, Light light, float t) {
 }
 
 void main() {
-	#define UNION 1
-	#define INTER 0
-
+	#define SPHERE 0
+	#define BOX    0
+	#define UNION  0
+	#define INTER  0
+	#define SUBTR  1
 
 	// colors
 	vec4 white = vec4(1, 1, 1, 1);
@@ -158,7 +160,7 @@ void main() {
 	vec4 color = black;
 
 	Sphere sphere;
-	sphere.center = vec3(1.0, 1.0, 0.0);
+	sphere.center = vec3(0.0, 0.5, 0.0);
 	sphere.radius = 1.2;
 	sphere.color = green;
 
@@ -182,11 +184,19 @@ void main() {
 	float st1 = sphereHitPoints.y;
 	vec4 sphereColor = colorSphere(sphere, ray, light, sphereHitPoints.x);
 
+	// new colors
+	// vec3 ns = normalize((ray.origin + ray.direction * st0) - sphere.center);
+	// sphereColor = vec4(ns, 1) * 0.5;
+
 	vec2 boxHitPoints;
 	bool bi = intersectBox(box, ray, boxHitPoints);
 	float bt0 = boxHitPoints.x;
 	float bt1 = boxHitPoints.y;
 	vec4 boxColor = colorBox(box, ray, light, boxHitPoints.x);
+
+	// new colors
+	// vec3 nb = normalize((ray.origin + ray.direction * bt0) / 0.5);
+	// boxColor = vec4(nb, 1) / 0.5;
 
 	#if UNION
 	if (si && !bi) {
@@ -204,9 +214,9 @@ void main() {
 
 	#if INTER
 	if (si && bi) {
-		if (st0 > bt0) {
+		if (st0 > bt0 && st0 < bt1) {
 			color = sphereColor;
-		} else if (bt0 > st0) {
+		} else if (bt0 > st0 && bt0 < st1) {
 			color = boxColor;
 		}
 	} else {
@@ -214,22 +224,41 @@ void main() {
 	}
 	#endif
 
+	#if SUBTR
+	if (si && bi) {
+		if (bt0 > st0 && bt1 < st1) {
+			color = black;
+		}
+		else {
+			if (st1 > bt0 && bt0 > st0) {
+				color = sphereColor;
+			}
+      else {
+				color = boxColor;      	
+      }
+		}
+	} else if (bi) {
+		color = boxColor;
+	}
+	#endif	
 
+	#if SPHERE
+	{
+		vec2 hitPoints;
+		if (intersectSphere(sphere, ray, hitPoints)) {
+			color = colorSphere(sphere, ray, light, hitPoints.x);
+		}
+	}
+	#endif	
 
-	// --- OLD WAY ---
-	// {
-	// 	vec2 hitPoints;
-	// 	if (intersectSphere(sphere, ray, hitPoints)) {
-	// 		color = colorSphere(sphere, ray, light, hitPoints.x);
-	// 	}
-	// }
-
-	// {
-	// 	vec2 hitPoints;
-	// 	if (intersectBox(box, ray, hitPoints)) {
-	// 		color = colorBox(box, ray, light, hitPoints.y);
-	// 	}
-	// }
+	#if BOX
+	{
+		vec2 hitPoints;
+		if (intersectBox(box, ray, hitPoints)) {
+			color = colorBox(box, ray, light, hitPoints.y);
+		}
+	}
+	#endif
 
 	outColor = color;
 }
