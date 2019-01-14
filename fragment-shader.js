@@ -161,8 +161,8 @@ void main() {
 	vec4 color = black;
 
 	Sphere sphere;
-	sphere.center = vec3(0.0, 0.5, 0.0);
-	sphere.radius = 1.2;
+	sphere.center = vec3(0.0, 1.5, 0.0);
+	sphere.radius = 1.5;
 	sphere.color = green;
 
 	Box box;
@@ -239,7 +239,7 @@ void main() {
 	{
 		vec2 hitPoints;
 		if (intersectSphere(sphere, ray, hitPoints)) {
-			color = colorSphere(sphere, ray, light, hitPoints.x);
+			color = colorSphere(sphere, ray, light, hitPoints.x, false);
 		}
 	}
 	#endif	
@@ -248,7 +248,7 @@ void main() {
 	{
 		vec2 hitPoints;
 		if (intersectBox(box, ray, hitPoints)) {
-			color = colorBox(box, ray, light, hitPoints.y);
+			color = colorBox(box, ray, light, hitPoints.x);
 		}
 	}
 	#endif
