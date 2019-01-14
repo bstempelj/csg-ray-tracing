@@ -9,6 +9,8 @@ in vec4 v_position;
 uniform vec2 u_translation;
 uniform vec2 u_rotation;
 
+uniform mat4 u_sphereMatrix;
+
 uniform mat4 u_projection;
 uniform mat4 u_matrix;
 
@@ -161,7 +163,7 @@ void main() {
 	vec4 color = black;
 
 	Sphere sphere;
-	sphere.center = vec3(0.0, 1.5, 0.0);
+	sphere.center = u_sphereMatrix[3].xyz;
 	sphere.radius = 1.5;
 	sphere.color = green;
 

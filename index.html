@@ -3,9 +3,31 @@
 	<head>
 		<meta charset="utf-8">
 		<title>CSG Ray Tracing</title>
+		<link rel="stylesheet" href="style.css">
 	</head>
 	<body>
 		<canvas id="canvas" width="600" height="600"></canvas>
+
+
+		<div id="ui-menu" class="ui-menu">
+			<p><b>Sphere position:</b></p>
+			<div>
+				<input type="range" id="xPosition" name="x-position">
+				<label for="x-position">X</label>
+			</div>
+
+			<div>
+				<input type="range" id="yPosition" name="y-position">
+				<label for="y-position">Y</label>
+			</div>
+
+			<div>
+				<input type="range" id="zPosition" name="z-position">
+				<label for="z-position">Z</label>
+			</div>
+		</div>
+
+
 		<script type="text/javascript" src="vertex-shader.js"></script>
 		<script type="text/javascript" src="fragment-shader.js"></script>
 		<script type="text/javascript" src="utils.js"></script>

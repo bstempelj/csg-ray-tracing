@@ -1,0 +1,12 @@
+* {
+	font-family: Arial, sans-serif;
+}
+
+canvas {
+	float: left;
+}
+
+.ui-menu {
+	float: left;
+	padding-left: 50px;
+}

@@ -5,6 +5,25 @@ if (!gl) {
 	console.error('Sorry no WebGL2 for you!');
 }
 
+// init ui
+const xPosSlider = document.getElementById('xPosition');
+xPosSlider.min = -3.0;
+xPosSlider.max = 3.0;
+xPosSlider.step = 0.1;
+xPosSlider.defaultValue = 0.0;
+
+const yPosSlider = document.getElementById('yPosition');
+yPosSlider.min = -3.0;
+yPosSlider.max = 3.0;
+yPosSlider.step = 0.1;
+yPosSlider.defaultValue = 0.0;
+
+const zPosSlider = document.getElementById('zPosition');
+zPosSlider.min = -3.0;
+zPosSlider.max = 3.0;
+zPosSlider.step = 0.1;
+zPosSlider.defaultValue = 0.0;
+
 // compile program
 const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
 const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSrc);
@@ -16,6 +35,9 @@ const translationUniformLocation = gl.getUniformLocation(program, 'u_translation
 const rotationUniformLocation = gl.getUniformLocation(program, 'u_rotation');
 const matrixLocation = gl.getUniformLocation(program, 'u_matrix');
 const projectionLocation = gl.getUniformLocation(program, 'u_projection');
+
+// matrix locations
+const sphereMatrixLocation = gl.getUniformLocation(program, 'u_sphereMatrix');
 
 const buffers = initBuffers();
 
@@ -70,6 +92,9 @@ var projection = [
 function drawScene(deltaTime) {
 	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
+	// ui
+	// console.log('xPosition: ' + xPosSlider.value);
+
 	// clear the scene
 	gl.clearColor(0, 0, 0, 1);
 	gl.clear(gl.COLOR_BUFFER_BIT);
@@ -87,6 +112,24 @@ function drawScene(deltaTime) {
 
 	// projection matrix
 	gl.uniformMatrix4fv(projectionLocation, false, projection);
+
+	
+	{
+		// set sphere transforms
+		let sphereMatrix = [
+			1,  0,  0,  0,
+			0,  1,  0,  0,
+			0,  0,  1,  0,
+			0,  0,  0,  1,
+		];
+
+		let x = xPosSlider.value;
+		const y = yPosSlider.value;
+		const z = zPosSlider.value;
+		sphereMatrix = m4.multiply(sphereMatrix, m4.translation(x, y, z));
+		gl.uniformMatrix4fv(sphereMatrixLocation, false, sphereMatrix);
+	}
+
 
 	// transformation matrix
 	let matrix = [
