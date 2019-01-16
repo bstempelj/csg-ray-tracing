@@ -9,7 +9,10 @@ in vec4 v_position;
 uniform vec2 u_translation;
 uniform vec2 u_rotation;
 
+uniform int u_csgOperation;
+
 uniform mat4 u_sphereMatrix;
+uniform float u_sphereRadius;
 
 uniform mat4 u_projection;
 uniform mat4 u_matrix;
@@ -164,7 +167,7 @@ void main() {
 
 	Sphere sphere;
 	sphere.center = u_sphereMatrix[3].xyz;
-	sphere.radius = 1.5;
+	sphere.radius = u_sphereRadius;
 	sphere.color = green;
 
 	Box box;
@@ -192,50 +195,49 @@ void main() {
 	float bt1 = boxHitPoints.y;
 	vec4 boxColor = colorBox(box, ray, light, boxHitPoints.x);
 
-	#if UNION
-	if (si && !bi) {
-		color = sphereColor;
-	} else if (!si && bi) {
-		color = boxColor;
-	}
-
-	if (si && (st0 < bt0)) {
-		color = sphereColor;
-	} else if (bi && (bt0 < st0)) {
-		color = boxColor;
-	}
-	#endif
-
-	#if INTER
-	if (si && bi) {
-		if (st0 > bt0 && st0 < bt1) {
+	// switch between operations
+	if (u_csgOperation == 0) {
+		if (si && !bi) {
 			color = sphereColor;
-		} else if (bt0 > st0 && bt0 < st1) {
+		} else if (!si && bi) {
 			color = boxColor;
 		}
-	} else {
-		color = black;
-	}
-	#endif
 
-	#if SUBTR
-	if (si && bi) {
-		if (bt0 > st0 && bt1 < st1) {
+		if (si && (st0 < bt0)) {
+			color = sphereColor;
+		} else if (bi && (bt0 < st0)) {
+			color = boxColor;
+		}
+	}
+	else if (u_csgOperation == 1) {
+		if (si && bi) {
+			if (st0 > bt0 && st0 < bt1) {
+				color = sphereColor;
+			} else if (bt0 > st0 && bt0 < st1) {
+				color = boxColor;
+			}
+		} else {
 			color = black;
 		}
-		else {
-			if (st1 > bt0 && bt0 > st0) {
-				// color = sphereColor;
-				color = colorSphere(sphere, ray, light, st1, true);
-			}
-      else {
-				color = boxColor;      	
-      }
-		}
-	} else if (bi) {
-		color = boxColor;
 	}
-	#endif	
+	else if (u_csgOperation == 2) {
+		if (si && bi) {
+			if (bt0 > st0 && bt1 < st1) {
+				color = black;
+			}
+			else {
+				if (st1 > bt0 && bt0 > st0) {
+					// color = sphereColor;
+					color = colorSphere(sphere, ray, light, st1, true);
+				}
+	      else {
+					color = boxColor;      	
+	      }
+			}
+		} else if (bi) {
+			color = boxColor;
+		}
+	}
 
 	#if SPHERE
 	{

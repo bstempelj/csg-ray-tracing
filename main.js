@@ -6,23 +6,47 @@ if (!gl) {
 }
 
 // init ui
-const xPosSlider = document.getElementById('xPosition');
+const xPosSlider = document.getElementById('xPos');
 xPosSlider.min = -3.0;
 xPosSlider.max = 3.0;
 xPosSlider.step = 0.1;
 xPosSlider.defaultValue = 0.0;
 
-const yPosSlider = document.getElementById('yPosition');
+const yPosSlider = document.getElementById('yPos');
 yPosSlider.min = -3.0;
 yPosSlider.max = 3.0;
 yPosSlider.step = 0.1;
 yPosSlider.defaultValue = 0.0;
 
-const zPosSlider = document.getElementById('zPosition');
+const zPosSlider = document.getElementById('zPos');
 zPosSlider.min = -3.0;
 zPosSlider.max = 3.0;
 zPosSlider.step = 0.1;
 zPosSlider.defaultValue = 0.0;
+
+const radiusSlider = document.getElementById('radius');
+radiusSlider.min = 0.5;
+radiusSlider.max = 2.0;
+radiusSlider.step = 0.1;
+radiusSlider.defaultValue = 1.25;
+
+const xRotationSlider = document.getElementById('xRotation');
+xRotationSlider.min = -360;
+xRotationSlider.max = 360;
+xRotationSlider.step = 1;
+xRotationSlider.defaultValue = -30;
+
+
+let csgOperation = 0;
+
+const unionBtn = document.getElementById('unionBtn');
+unionBtn.addEventListener('click', function() { console.log('switching to union'); csgOperation = 0; }, false);
+
+const interBtn = document.getElementById('interBtn');
+interBtn.addEventListener('click', function() { console.log('switching to intersection'); csgOperation = 1; }, false);
+
+const subtrBtn = document.getElementById('subtrBtn');
+subtrBtn.addEventListener('click', function() { console.log('switching to subtraction'); csgOperation = 2; }, false);
 
 // compile program
 const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSrc);
@@ -36,8 +60,16 @@ const rotationUniformLocation = gl.getUniformLocation(program, 'u_rotation');
 const matrixLocation = gl.getUniformLocation(program, 'u_matrix');
 const projectionLocation = gl.getUniformLocation(program, 'u_projection');
 
-// matrix locations
+
+// sphere locations
 const sphereMatrixLocation = gl.getUniformLocation(program, 'u_sphereMatrix');
+const sphereRadiusLocation = gl.getUniformLocation(program, 'u_sphereRadius');
+
+// light
+const lightAngleLocation = gl.getUniformLocation(program, 'u_lightAngle');
+
+// oth
+const csgOperationLocation = gl.getUniformLocation(program, 'u_csgOperation');
 
 const buffers = initBuffers();
 
@@ -113,6 +145,12 @@ function drawScene(deltaTime) {
 	// projection matrix
 	gl.uniformMatrix4fv(projectionLocation, false, projection);
 
+
+	// set csg operation
+	gl.uniform1i(csgOperationLocation, csgOperation);
+
+	// set sphere radius
+	gl.uniform1f(sphereRadiusLocation, radiusSlider.value);
 	
 	{
 		// set sphere transforms
@@ -139,7 +177,8 @@ function drawScene(deltaTime) {
 	   0, 0, 5, 1,
 	];
 	var rotationMatrix = m4.yRotation(toRad(angle));
-	rotationMatrix = m4.multiply(rotationMatrix, m4.xRotation(toRad(-30)));
+	rotationMatrix = m4.multiply(rotationMatrix, m4.xRotation(toRad(xRotationSlider.value)));
+	// rotationMatrix = m4.multiply(rotationMatrix, m4.zRotation(toRad(zRotationSlider.value)));
 	matrix = m4.multiply(rotationMatrix, matrix);
 	gl.uniformMatrix4fv(matrixLocation, false, matrix);
 
