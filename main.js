@@ -31,10 +31,16 @@ radiusSlider.step = 0.1;
 radiusSlider.defaultValue = 1.25;
 
 const xRotationSlider = document.getElementById('xRotation');
-xRotationSlider.min = -360;
-xRotationSlider.max = 360;
+xRotationSlider.min = -180;
+xRotationSlider.max = 180;
 xRotationSlider.step = 1;
 xRotationSlider.defaultValue = -30;
+
+const zRotationSlider = document.getElementById('zRotation');
+zRotationSlider.min = -180;
+zRotationSlider.max = 180;
+zRotationSlider.step = 1;
+zRotationSlider.defaultValue = 0;
 
 
 let csgOperation = 0;
@@ -178,7 +184,7 @@ function drawScene(deltaTime) {
 	];
 	var rotationMatrix = m4.yRotation(toRad(angle));
 	rotationMatrix = m4.multiply(rotationMatrix, m4.xRotation(toRad(xRotationSlider.value)));
-	// rotationMatrix = m4.multiply(rotationMatrix, m4.zRotation(toRad(zRotationSlider.value)));
+	rotationMatrix = m4.multiply(rotationMatrix, m4.zRotation(toRad(zRotationSlider.value)));
 	matrix = m4.multiply(rotationMatrix, matrix);
 	gl.uniformMatrix4fv(matrixLocation, false, matrix);
 
