@@ -1,7 +1,5 @@
 const fragmentShaderSrc = `#version 300 es
 
-#define M_PI 3.1415926535897932384626433832795
-
 precision mediump float;
 
 in vec4 v_position;
@@ -42,6 +40,7 @@ struct Light {
 	float intensity;
 };
 
+/* updated from: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-sphere-intersection */
 bool intersectSphere(Sphere sphere, Ray ray, out vec2 hitPoints) {
 	float t0, t1;
 
@@ -70,6 +69,7 @@ void swap(inout float tmin, inout float tmax) {
 	tmax = temp;
 }
 
+/* updated from: https://www.scratchapixel.com/lessons/3d-basic-rendering/minimal-ray-tracer-rendering-simple-shapes/ray-box-intersection */
 bool intersectBox(Box box, Ray r, out vec2 result) {
 	vec3 min = box.bounds[0];
 	vec3 max = box.bounds[1];
@@ -150,11 +150,6 @@ vec4 colorBox(Box box, Ray ray, Light light, float t) {
 }
 
 void main() {
-	#define SPHERE 0
-	#define BOX    0
-	#define UNION  0
-	#define INTER  0
-	#define SUBTR  1
 
 	// colors
 	vec4 white = vec4(1, 1, 1, 1);
@@ -238,24 +233,6 @@ void main() {
 			color = boxColor;
 		}
 	}
-
-	#if SPHERE
-	{
-		vec2 hitPoints;
-		if (intersectSphere(sphere, ray, hitPoints)) {
-			color = colorSphere(sphere, ray, light, hitPoints.x, false);
-		}
-	}
-	#endif	
-
-	#if BOX
-	{
-		vec2 hitPoints;
-		if (intersectBox(box, ray, hitPoints)) {
-			color = colorBox(box, ray, light, hitPoints.x);
-		}
-	}
-	#endif
 
 	outColor = color;
 }
